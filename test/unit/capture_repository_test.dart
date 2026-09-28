@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Variable;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tide/data/db/app_database.dart';
 import 'package:tide/data/repositories/capture_repository.dart';
@@ -59,5 +60,29 @@ void main() {
     await repo.add('one');
     await repo.add('two');
     expect(await repo.watchInboxCount().first, 2);
+  });
+
+  test('timestamps are stored in UTC and read back as the same local moment', () async {
+    final local = DateTime(2026, 9, 28, 9, 30);
+    clock.set(local);
+    final c = await repo.add('Stored in UTC');
+    final raw = await db
+        .customSelect('SELECT created_at, updated_at FROM captures WHERE id = ?',
+            variables: [Variable.withString(c!.id)])
+        .getSingle();
+    expect(raw.read<String>('created_at'), endsWith('Z'));
+    expect(raw.read<String>('updated_at'), endsWith('Z'));
+
+    final read = (await repo.watchInbox().first).single;
+    expect(read.createdAt.isUtc, isFalse);
+    expect(read.createdAt.isAtSameMomentAs(local), isTrue);
+  });
+
+  test('inbox order follows real time even when the clock offset changes', () async {
+    clock.set(DateTime(2026, 9, 28, 10, 0)); // local, e.g. +02:00
+    await repo.add('earlier');
+    clock.set(DateTime(2026, 9, 28, 10, 1).toUtc()); // one minute later, expressed in UTC
+    await repo.add('later');
+    expect(await inboxBodies(), ['earlier', 'later']);
   });
 }

@@ -29,6 +29,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       ..showSnackBar(SnackBar(
         content: const Text('Archived'),
         duration: const Duration(seconds: 4),
+        // A snackbar with an action persists by default; the spec wants it gone after 4 s.
+        persist: false,
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () async {

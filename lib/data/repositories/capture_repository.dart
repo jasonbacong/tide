@@ -25,11 +25,12 @@ class CaptureRepository {
     final body = raw.trim();
     if (body.isEmpty) return null;
     final now = _clock.now();
+    final stamp = now.toUtc();
     final id = _uuid.v4();
     await _db.into(_db.captures).insert(CapturesCompanion.insert(
           id: id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: stamp,
+          updatedAt: stamp,
           body: body,
           status: CaptureStatus.inbox,
         ));
@@ -54,9 +55,9 @@ class CaptureRepository {
 
   Future<void> _setStatus(String id, CaptureStatus status) =>
       (_db.update(_db.captures)..where((c) => c.id.equals(id))).write(
-        CapturesCompanion(status: Value(status), updatedAt: Value(_clock.now())),
+        CapturesCompanion(status: Value(status), updatedAt: Value(_clock.now().toUtc())),
       );
 
   static Capture _toCapture(CaptureRow row) =>
-      Capture(id: row.id, body: row.body, createdAt: row.createdAt);
+      Capture(id: row.id, body: row.body, createdAt: row.createdAt.toLocal());
 }

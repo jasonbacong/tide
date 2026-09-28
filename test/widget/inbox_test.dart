@@ -63,4 +63,20 @@ void main() {
     expect(text.overflow, TextOverflow.ellipsis);
     await disposeTideApp(tester, db);
   });
+
+  testWidgets('the Archived message goes away on its own after about 4 seconds', (tester) async {
+    final db = await pumpTideApp(tester);
+    await capture(tester, 'Call the bank');
+    await tester.tap(find.text('1 thought in your inbox'));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.text('Call the bank'), const Offset(-600, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Archived'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Archived'), findsNothing);
+    await disposeTideApp(tester, db);
+  });
 }
