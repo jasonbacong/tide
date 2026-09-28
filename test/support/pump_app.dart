@@ -25,6 +25,7 @@ Future<AppDatabase> pumpTideApp(WidgetTester tester, {FakeClock? clock}) async {
 /// Tears the tree down first so providers cancel timers and streams, then closes the DB.
 Future<void> disposeTideApp(WidgetTester tester, AppDatabase db) async {
   await tester.pumpWidget(const SizedBox());
-  await tester.pump();
-  await tester.runAsync(db.close);
+  // Drift cancels stream queries on a timer; let fake time run so it can finish.
+  await tester.pump(const Duration(seconds: 1));
+  await db.close();
 }

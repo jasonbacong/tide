@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'inbox_line.dart';
 import 'today_header.dart';
 
 class TodayScreen extends StatelessWidget {
@@ -12,6 +13,8 @@ class TodayScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 120),
         children: const [
           TodayHeader(),
+          SizedBox(height: 16),
+          InboxLine(),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/capture/inbox_screen.dart';
 import 'features/goals/goals_screen.dart';
 import 'features/journal/journal_screen.dart';
 import 'features/today/today_screen.dart';
@@ -33,7 +34,16 @@ GoRouter buildRouter() => GoRouter(
           builder: (context, state, shell) => HomeShell(shell: shell),
           branches: [
             StatefulShellBranch(routes: [
-              GoRoute(path: '/today', builder: (context, state) => const TodayScreen()),
+              GoRoute(
+                path: '/today',
+                builder: (context, state) => const TodayScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'inbox',
+                    pageBuilder: (context, state) => calmPage(state, const InboxScreen()),
+                  ),
+                ],
+              ),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(path: '/goals', builder: (context, state) => const GoalsScreen()),
