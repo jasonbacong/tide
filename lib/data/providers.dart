@@ -6,6 +6,7 @@ import '../ui/day_period.dart';
 import 'clock.dart';
 import 'db/app_database.dart';
 import 'repositories/capture_repository.dart';
+import 'repositories/task_repository.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase.open();
@@ -35,3 +36,10 @@ class NowNotifier extends Notifier<DateTime> {
 final nowProvider = NotifierProvider<NowNotifier, DateTime>(NowNotifier.new);
 
 final dayPeriodProvider = Provider<PartOfDay>((ref) => periodFor(ref.watch(nowProvider)));
+
+/// Today's local date key. Everything per-day watches this, so it rolls over at midnight.
+final todayKeyProvider = Provider<String>((ref) => dateKey(ref.watch(nowProvider)));
+
+final taskRepositoryProvider = Provider<TaskRepository>(
+  (ref) => TaskRepository(ref.watch(databaseProvider), ref.watch(clockProvider)),
+);
