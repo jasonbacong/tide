@@ -5,6 +5,9 @@ import '../../data/providers.dart';
 import '../../data/repositories/capture_repository.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../../data/async_x.dart';
+import '../../data/repositories/goal_repository.dart';
+import '../goals/providers.dart';
 import '../tasks/task_editor_sheet.dart';
 import 'providers.dart';
 
@@ -42,10 +45,11 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       ));
   }
 
-  Future<void> _makeTask(Capture capture) async {
+  Future<void> _makeTask(Capture capture, {String? goalId}) async {
     final repo = ref.read(captureRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
-    final saved = await showTaskEditor(context, initialTitle: capture.body);
+    final saved =
+        await showTaskEditor(context, initialTitle: capture.body, initialGoalId: goalId);
     if (!saved) return;
     if (mounted) setState(() => _hidden.add(capture.id));
     await repo.markConverted(capture.id);
@@ -54,10 +58,70 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       ..showSnackBar(const SnackBar(content: Text('Task added'), duration: Duration(seconds: 2)));
   }
 
+  Future<void> _openActions(Capture capture) async {
+    final goals = ref.read(activeGoalsProvider).listOrEmpty;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      useRootNavigator: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.add_task),
+            title: const Text('Make task'),
+            onTap: () => Navigator.pop(context, 'task'),
+          ),
+          if (goals.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: const Text('Link to goal'),
+              onTap: () => Navigator.pop(context, 'goal'),
+            ),
+          ListTile(
+            leading: const Icon(Icons.archive_outlined),
+            title: const Text('Archive'),
+            onTap: () => Navigator.pop(context, 'archive'),
+          ),
+        ]),
+      ),
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case 'task':
+        await _makeTask(capture);
+      case 'goal':
+        await _linkToGoal(capture, goals);
+      case 'archive':
+        await _archive(capture);
+    }
+  }
+
+  Future<void> _linkToGoal(Capture capture, List<GoalWithProgress> goals) async {
+    final goalId = await showModalBottomSheet<String>(
+      context: context,
+      useRootNavigator: true,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          for (final g in goals)
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: Text(g.goal.title),
+              onTap: () => Navigator.pop(context, g.goal.id),
+            ),
+        ]),
+      ),
+    );
+    if (goalId == null || !mounted) return;
+    await _makeTask(capture, goalId: goalId);
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = context.tide;
     final inbox = ref.watch(inboxProvider);
+    // Keep goals loaded here: the Goals tab may never have been opened this session.
+    ref.watch(activeGoalsProvider);
     return Scaffold(
       appBar: AppBar(title: Text('Inbox', style: TideType.title(c.ink))),
       body: switch (inbox) {
@@ -106,7 +170,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
             borderRadius: BorderRadius.circular(18),
             child: InkWell(
               borderRadius: BorderRadius.circular(18),
-              onTap: () => _makeTask(capture),
+              onTap: () => _openActions(capture),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(children: [
