@@ -55,3 +55,6 @@ backups/
 android/key.properties
 *.jks
 *.keystore
+
+# Android build output
+android/build/
