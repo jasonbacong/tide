@@ -15,9 +15,10 @@ void main() {
   late Directory tmp;
   late BackupService service;
 
-  setUp(() {
+  setUp(() async {
     db = testDb();
     clock = FakeClock(DateTime(2026, 9, 28, 9));
+    await SettingsRepository(db, clock).setName('Jason'); // set up, so auto-backups run
     tmp = Directory.systemTemp.createTempSync('tide_backup_test');
     service = BackupService(
       db: db,

@@ -48,11 +48,34 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Development builds install as a separate app, so `flutter run` can never
+            // replace (and wipe) the real Tide on the phone.
+            applicationIdSuffix = ".debug"
+        }
         release {
-            // Debug keys until android/key.properties exists (see the M5 plan, Task 10).
             signingConfig = if (keystoreProperties.isEmpty) signingConfigs.getByName("debug")
                             else signingConfigs.getByName("release")
         }
+    }
+}
+
+// Never fall back to the debug key silently for a release: a differently-signed build can only
+// be installed by uninstalling Tide first, which erases its data. Until android/key.properties
+// exists, opt in explicitly with TIDE_ALLOW_DEBUG_SIGNING=1. (Checked only when a release task runs.)
+gradle.taskGraph.whenReady {
+    val releaseRequested = allTasks.any { task ->
+        task.project == project &&
+            (task.name.startsWith("assemble") || task.name.startsWith("bundle")) &&
+            task.name.contains("Release")
+    }
+    if (releaseRequested && keystoreProperties.isEmpty &&
+        System.getenv("TIDE_ALLOW_DEBUG_SIGNING") != "1"
+    ) {
+        throw GradleException(
+            "android/key.properties is missing. Create it (see M5 plan, Task 10) or set " +
+                "TIDE_ALLOW_DEBUG_SIGNING=1 while the phone still has a debug-signed Tide."
+        )
     }
 }
 

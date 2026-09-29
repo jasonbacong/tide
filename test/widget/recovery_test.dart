@@ -49,4 +49,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("That file isn't a Tide backup."), findsOneWidget);
   });
+
+  testWidgets('a temporary problem can be retried without touching any data', (tester) async {
+    final actions = _FakeActions(latest: File('/b/tide-backup-2026-09-21-090000.tide.json'));
+    var retried = false;
+    await tester.pumpWidget(RecoveryApp(actions: actions, onRecovered: () async => retried = true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(retried, isTrue);
+    expect(actions.restoredFrom, isNull);
+  });
 }

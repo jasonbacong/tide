@@ -2522,10 +2522,13 @@ He should keep `~/tide-upload.jks` and the passwords in his password manager. Lo
 `adb uninstall` permanently deletes the app's data on the phone. Before running it, ask Jason: "Your backup from <date> is in Drive. OK to uninstall the old build?" Wait for a clear yes.
 
 ```bash
-flutter build apk --release
+flutter build apk --release   # now signed with the real key from android/key.properties
 ~/Library/Android/sdk/platform-tools/adb uninstall com.jasongrech.tide
-flutter install -d RFCX20G1V5B --release
+~/Library/Android/sdk/platform-tools/adb install build/app/outputs/flutter-apk/app-release.apk
 ```
+
+(Updated after the M5 review: `flutter install` always uninstalls first, so every install and update
+uses `adb install -r` instead. See README.)
 
 On the phone: the welcome screen appears. Jason taps **Restore from a backup**, picks the Drive file, and taps **Replace**. Today should come back with his name, habits, tasks, goals and journal.
 

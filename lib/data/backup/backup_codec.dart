@@ -97,6 +97,10 @@ abstract final class BackupCodec {
       }
     }
 
+    final settings = list('app_settings', SettingsRow.fromJson);
+    // Exactly the one settings row (id 1), or none; anything else would leave the app blank.
+    if (settings.length > 1 || settings.any((r) => r.id != 1)) throw notTide;
+
     return BackupData(
       exportedAt: DateTime.tryParse(decoded['exportedAt'] as String? ?? ''),
       captures: list('captures', CaptureRow.fromJson),
@@ -106,7 +110,7 @@ abstract final class BackupCodec {
       checkIns: list('check_ins', CheckInRow.fromJson),
       goals: list('goals', GoalRow.fromJson),
       milestones: list('milestones', MilestoneRow.fromJson),
-      settings: list('app_settings', SettingsRow.fromJson),
+      settings: settings,
     );
   }
 
