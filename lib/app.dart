@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'data/enums.dart';
 import 'data/providers.dart';
+import 'features/onboarding/welcome_screen.dart';
 import 'router.dart';
 import 'ui/motion.dart';
 import 'ui/theme.dart';
@@ -34,18 +36,44 @@ class _TideAppState extends ConsumerState<TideApp> {
     super.dispose();
   }
 
+  ThemeMode _mode(ThemePreference p) => switch (p) {
+        ThemePreference.system => ThemeMode.system,
+        ThemePreference.light => ThemeMode.light,
+        ThemePreference.dark => ThemeMode.dark,
+      };
+
   @override
   Widget build(BuildContext context) {
     final period = ref.watch(dayPeriodProvider);
-    return MaterialApp.router(
-      title: 'Tide',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(Brightness.light, period),
-      darkTheme: buildTheme(Brightness.dark, period),
-      themeMode: ThemeMode.system,
-      themeAnimationDuration: Motion.crossfade,
-      themeAnimationCurve: Motion.ease,
-      routerConfig: _router,
-    );
+    final light = buildTheme(Brightness.light, period);
+    final dark = buildTheme(Brightness.dark, period);
+    // `.value` keeps the last settings during any reload, so navigation is never reset.
+    final settings = ref.watch(settingsProvider).value;
+    return switch (settings) {
+      final value? when value.name.isEmpty => MaterialApp(
+          title: 'Tide',
+          debugShowCheckedModeBanner: false,
+          theme: light,
+          darkTheme: dark,
+          themeMode: _mode(value.theme),
+          home: const WelcomeScreen(),
+        ),
+      final value? => MaterialApp.router(
+          title: 'Tide',
+          debugShowCheckedModeBanner: false,
+          theme: light,
+          darkTheme: dark,
+          themeMode: _mode(value.theme),
+          themeAnimationDuration: Motion.crossfade,
+          themeAnimationCurve: Motion.ease,
+          routerConfig: _router,
+        ),
+      null => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: light,
+          darkTheme: dark,
+          home: const Scaffold(),
+        ),
+    };
   }
 }

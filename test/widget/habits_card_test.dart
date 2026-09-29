@@ -68,7 +68,7 @@ void main() {
 
     expect(circle(tester, read).item.done, isFalse);
     expect(find.text('Tuesday, 29 Sep'), findsOneWidget);
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text('Good morning, Jason'), findsOneWidget);
     await disposeTideApp(tester, db);
   });
 }

@@ -15,13 +15,13 @@ class TodayHeader extends ConsumerWidget {
     final now = ref.watch(nowProvider);
     final period = ref.watch(dayPeriodProvider);
     final c = context.tide;
+    final name = ref.watch(settingsProvider).value?.name ?? '';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(DateFormat('EEEE, d MMM').format(now), style: TideType.label(c.muted)),
         const SizedBox(height: 4),
-        // Name is wired to settings in Milestone 5 (onboarding).
-        Text(greetingFor(period, ''), style: TideType.greeting(c.ink)),
+        Text(greetingFor(period, name), style: TideType.greeting(c.ink)),
       ],
     );
   }

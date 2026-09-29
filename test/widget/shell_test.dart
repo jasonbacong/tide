@@ -10,13 +10,13 @@ void main() {
   testWidgets('Today shows the date and a morning greeting', (tester) async {
     final db = await pumpTideApp(tester);
     expect(find.text('Monday, 28 Sep'), findsOneWidget);
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text('Good morning, Jason'), findsOneWidget);
     await disposeTideApp(tester, db);
   });
 
   testWidgets('greeting follows the clock into the evening', (tester) async {
     final db = await pumpTideApp(tester, clock: FakeClock(DateTime(2026, 9, 28, 18)));
-    expect(find.text('Good evening'), findsOneWidget);
+    expect(find.text('Good evening, Jason'), findsOneWidget);
     await disposeTideApp(tester, db);
   });
 
@@ -34,7 +34,7 @@ void main() {
 
     await tester.tap(find.text('Today'));
     await tester.pumpAndSettle();
-    expect(find.text('Good morning'), findsOneWidget);
+    expect(find.text('Good morning, Jason'), findsOneWidget);
     await disposeTideApp(tester, db);
   });
 }
