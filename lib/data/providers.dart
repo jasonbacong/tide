@@ -9,6 +9,7 @@ import 'repositories/capture_repository.dart';
 import 'repositories/check_in_repository.dart';
 import 'repositories/goal_repository.dart';
 import 'repositories/habit_repository.dart';
+import 'repositories/settings_repository.dart';
 import 'repositories/task_repository.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -71,3 +72,10 @@ final checkInRepositoryProvider = Provider<CheckInRepository>(
 final goalRepositoryProvider = Provider<GoalRepository>(
   (ref) => GoalRepository(ref.watch(databaseProvider), ref.watch(clockProvider)),
 );
+
+final settingsRepositoryProvider = Provider<SettingsRepository>(
+  (ref) => SettingsRepository(ref.watch(databaseProvider), ref.watch(clockProvider)),
+);
+
+final settingsProvider =
+    StreamProvider<Settings>((ref) => ref.watch(settingsRepositoryProvider).watch());
