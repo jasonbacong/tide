@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'features/capture/inbox_screen.dart';
 import 'features/checkin/check_in_editor_screen.dart';
+import 'features/goals/goal_detail_screen.dart';
 import 'features/goals/goals_screen.dart';
 import 'features/journal/journal_screen.dart';
 import 'features/tasks/later_screen.dart';
@@ -52,7 +53,17 @@ GoRouter buildRouter() => GoRouter(
               ),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: '/goals', builder: (context, state) => const GoalsScreen()),
+              GoRoute(
+                path: '/goals',
+                builder: (context, state) => const GoalsScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    pageBuilder: (context, state) =>
+                        calmPage(state, GoalDetailScreen(goalId: state.pathParameters['id']!)),
+                  ),
+                ],
+              ),
             ]),
             StatefulShellBranch(routes: [
               GoRoute(
