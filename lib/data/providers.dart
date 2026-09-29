@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../ui/day_period.dart';
+import 'backup/backup_service.dart';
 import 'clock.dart';
 import 'db/app_database.dart';
 import 'repositories/capture_repository.dart';
@@ -79,3 +82,11 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 
 final settingsProvider =
     StreamProvider<Settings>((ref) => ref.watch(settingsRepositoryProvider).watch());
+
+final backupServiceProvider = Provider<BackupService>((ref) => BackupService(
+      db: ref.watch(databaseProvider),
+      clock: ref.watch(clockProvider),
+      settings: ref.watch(settingsRepositoryProvider),
+      backupsDir: () async => Directory('${(await getApplicationDocumentsDirectory()).path}/backups'),
+      exportDir: getTemporaryDirectory,
+    ));
