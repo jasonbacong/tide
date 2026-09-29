@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'features/capture/inbox_screen.dart';
 import 'features/goals/goals_screen.dart';
 import 'features/journal/journal_screen.dart';
+import 'features/tasks/later_screen.dart';
 import 'features/today/today_screen.dart';
 import 'ui/home_shell.dart';
 import 'ui/motion.dart';
@@ -41,6 +42,10 @@ GoRouter buildRouter() => GoRouter(
                   GoRoute(
                     path: 'inbox',
                     pageBuilder: (context, state) => calmPage(state, const InboxScreen()),
+                  ),
+                  GoRoute(
+                    path: 'later',
+                    pageBuilder: (context, state) => calmPage(state, const LaterScreen()),
                   ),
                 ],
               ),
