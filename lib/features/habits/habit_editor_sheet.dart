@@ -6,6 +6,7 @@ import '../../data/repositories/habit_repository.dart';
 import '../../ui/motion.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../goals/goal_picker.dart';
 import 'habit_icons.dart';
 
 const softHabitLimit = 8;
@@ -40,6 +41,7 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
   late final TextEditingController _name = TextEditingController(text: widget.habit?.name ?? '');
   late String _icon = widget.habit?.icon ?? habitIcons.keys.first;
   late int _target = widget.habit?.dailyTarget ?? 1;
+  late String? _goalId = widget.habit?.goalId;
   String? _error;
   bool _saving = false;
   int _activeCount = 0;
@@ -75,10 +77,10 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
     try {
       final h = widget.habit;
       if (h == null) {
-        await repo.add(name: _name.text, icon: _icon, dailyTarget: _target);
+        await repo.add(name: _name.text, icon: _icon, dailyTarget: _target, goalId: _goalId);
       } else {
         await repo.update(h.id,
-            name: _name.text, icon: _icon, dailyTarget: _target, goalId: h.goalId);
+            name: _name.text, icon: _icon, dailyTarget: _target, goalId: _goalId);
       }
       _close();
     } catch (_) {
@@ -184,6 +186,7 @@ class _HabitEditorSheetState extends ConsumerState<HabitEditorSheet> {
               ),
             ],
           ),
+          GoalPicker(value: _goalId, onChanged: (id) => setState(() => _goalId = id)),
           const SizedBox(height: 16),
           FilledButton(onPressed: _save, child: Text(editing ? 'Save' : 'Save habit')),
           if (editing)

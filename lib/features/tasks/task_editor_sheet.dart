@@ -9,9 +9,11 @@ import '../../data/repositories/task_repository.dart';
 import '../../ui/motion.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../goals/goal_picker.dart';
 import 'task_labels.dart';
 
-Future<bool> showTaskEditor(BuildContext context, {Task? task, String? initialTitle}) async {
+Future<bool> showTaskEditor(BuildContext context,
+    {Task? task, String? initialTitle, String? initialGoalId}) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
     // Above the tab shell's + button and bottom bar.
@@ -23,7 +25,8 @@ Future<bool> showTaskEditor(BuildContext context, {Task? task, String? initialTi
       duration: motion(context, Motion.sheet),
       reverseDuration: motion(context, Motion.quick),
     ),
-    builder: (_) => TaskEditorSheet(task: task, initialTitle: initialTitle),
+    builder: (_) =>
+        TaskEditorSheet(task: task, initialTitle: initialTitle, initialGoalId: initialGoalId),
   );
   return saved ?? false;
 }
@@ -31,10 +34,11 @@ Future<bool> showTaskEditor(BuildContext context, {Task? task, String? initialTi
 enum _When { today, later, date }
 
 class TaskEditorSheet extends ConsumerStatefulWidget {
-  const TaskEditorSheet({super.key, this.task, this.initialTitle});
+  const TaskEditorSheet({super.key, this.task, this.initialTitle, this.initialGoalId});
 
   final Task? task;
   final String? initialTitle;
+  final String? initialGoalId;
 
   @override
   ConsumerState<TaskEditorSheet> createState() => _TaskEditorSheetState();
@@ -45,6 +49,7 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
       TextEditingController(text: widget.task?.title ?? widget.initialTitle ?? '');
   Energy? _energy;
   int? _minutes;
+  late String? _goalId = widget.task?.goalId ?? widget.initialGoalId;
   _When _when = _When.today;
   String? _pickedDate;
   String? _error;
@@ -108,14 +113,15 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
     try {
       final existing = widget.task;
       if (existing == null) {
-        await repo.add(title: _title.text, energy: _energy, minutes: _minutes, date: date);
+        await repo.add(
+            title: _title.text, energy: _energy, minutes: _minutes, date: date, goalId: _goalId);
       } else {
         await repo.update(existing.id,
             title: _title.text,
             energy: _energy,
             minutes: _minutes,
             date: date,
-            goalId: existing.goalId);
+            goalId: _goalId);
       }
       if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) Navigator.of(context).pop(true);
     } catch (_) {
@@ -194,6 +200,7 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
               onSelected: (_) => _pickDate(),
             ),
           ]),
+          GoalPicker(value: _goalId, onChanged: (id) => setState(() => _goalId = id)),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: _save,

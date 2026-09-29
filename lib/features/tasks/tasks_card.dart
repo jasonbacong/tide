@@ -9,6 +9,7 @@ import '../../ui/motion.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
 import '../../ui/widgets/tide_card.dart';
+import '../goals/providers.dart';
 import 'providers.dart';
 import 'task_editor_sheet.dart';
 import 'task_filter.dart';
@@ -76,6 +77,7 @@ class _TasksCardState extends ConsumerState<TasksCard> {
   Widget _row(Task task) {
     final c = context.tide;
     final repo = ref.read(taskRepositoryProvider);
+    final titles = ref.watch(goalTitlesProvider).value ?? const <String, String>{};
     return Dismissible(
       key: ValueKey('dismiss-${task.id}'),
       direction: DismissDirection.endToStart,
@@ -90,6 +92,7 @@ class _TasksCardState extends ConsumerState<TasksCard> {
       ),
       child: TaskTile(
         task: task,
+        goalTitle: task.goalId == null ? null : titles[task.goalId],
         onToggle: () => task.isDone ? repo.uncomplete(task.id) : repo.complete(task.id),
         onOpen: () => showTaskEditor(context, task: task),
       ),

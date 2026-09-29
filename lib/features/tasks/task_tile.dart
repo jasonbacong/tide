@@ -9,9 +9,16 @@ import '../../ui/widgets/check_circle.dart';
 import 'task_labels.dart';
 
 class TaskTile extends StatefulWidget {
-  const TaskTile({super.key, required this.task, required this.onToggle, required this.onOpen});
+  const TaskTile({
+    super.key,
+    required this.task,
+    required this.onToggle,
+    required this.onOpen,
+    this.goalTitle,
+  });
 
   final Task task;
+  final String? goalTitle;
   final Future<void> Function() onToggle;
   final VoidCallback onOpen;
 
@@ -80,6 +87,8 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
                     children: [
                       StrikeText(task.title, progress: strike, style: TideType.body(ink)),
                       if (meta.isNotEmpty) Text(meta, style: TideType.label(c.muted)),
+                      if (widget.goalTitle != null)
+                        Text('→ ${widget.goalTitle}', style: TideType.label(c.accent)),
                     ],
                   ),
                 ),

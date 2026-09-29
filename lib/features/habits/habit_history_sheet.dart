@@ -7,6 +7,7 @@ import '../../data/repositories/habit_repository.dart';
 import '../../ui/motion.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../goals/providers.dart';
 import 'habit_editor_sheet.dart';
 import 'habit_icons.dart';
 import 'providers.dart';
@@ -54,6 +55,7 @@ class _HabitHistorySheet extends ConsumerWidget {
       AsyncData(:final value) => value,
       _ => const <String>{},
     };
+    final titles = ref.watch(goalTitlesProvider).value ?? const <String, String>{};
     final grid = weeksGrid(today);
     const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -70,6 +72,8 @@ class _HabitHistorySheet extends ConsumerWidget {
           ]),
           const SizedBox(height: 4),
           Text('Last 5 weeks', style: TideType.label(c.muted)),
+          if (habit.goalId != null && titles[habit.goalId] != null)
+            Text('→ ${titles[habit.goalId]}', style: TideType.label(c.accent)),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
