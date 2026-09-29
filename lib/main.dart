@@ -8,6 +8,7 @@ import 'data/clock.dart';
 import 'data/db/app_database.dart';
 import 'data/maintenance.dart';
 import 'data/providers.dart';
+import 'features/recovery/recovery_app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,13 @@ Future<void> main() async {
 /// Opens the database defensively; recovery hooks in here.
 Future<void> startTide() async {
   final db = AppDatabase.open();
-  await db.select(db.appSettings).get();
+  try {
+    await db.select(db.appSettings).get();
+  } catch (_) {
+    await db.close();
+    runApp(RecoveryApp(actions: DeviceRecoveryActions(), onRecovered: startTide));
+    return;
+  }
   final container = ProviderContainer(overrides: [databaseProvider.overrideWithValue(db)]);
   runApp(UncontrolledProviderScope(container: container, child: const TideApp()));
   unawaited(runStartupTasks(
