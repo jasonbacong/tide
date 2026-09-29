@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'features/capture/inbox_screen.dart';
+import 'features/checkin/check_in_editor_screen.dart';
 import 'features/goals/goals_screen.dart';
 import 'features/journal/journal_screen.dart';
 import 'features/tasks/later_screen.dart';
@@ -54,7 +55,19 @@ GoRouter buildRouter() => GoRouter(
               GoRoute(path: '/goals', builder: (context, state) => const GoalsScreen()),
             ]),
             StatefulShellBranch(routes: [
-              GoRoute(path: '/journal', builder: (context, state) => const JournalScreen()),
+              GoRoute(
+                path: '/journal',
+                builder: (context, state) => const JournalScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':date',
+                    pageBuilder: (context, state) => calmPage(
+                      state,
+                      CheckInEditorScreen(date: state.pathParameters['date']!),
+                    ),
+                  ),
+                ],
+              ),
             ]),
           ],
         ),

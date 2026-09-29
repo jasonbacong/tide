@@ -63,4 +63,35 @@ void main() {
     expect(find.text('Your check-ins will gather here, day by day.'), findsOneWidget);
     await disposeTideApp(tester, db);
   });
+
+  testWidgets('opening an entry lets you edit that day', (tester) async {
+    final db = await pumpTideApp(tester, seed: _seed);
+    await tester.tap(find.text('Journal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Quiet day by the sea.'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sunday, 27 Sep'), findsOneWidget);
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Quiet day by the sea.'), 'Quiet day by the sea. Swam.');
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+
+    final row = (await tester.runAsync(() => (db.select(db.checkIns)
+          ..where((c) => c.date.equals('2026-09-27')))
+        .getSingle()))!;
+    expect(row.reflection, 'Quiet day by the sea. Swam.');
+    await disposeTideApp(tester, db);
+  });
+
+  testWidgets('tapping an empty past day opens its editor', (tester) async {
+    final db = await pumpTideApp(tester, seed: _seed);
+    await tester.tap(find.text('Journal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('cal-2026-09-25')));
+    await tester.pumpAndSettle();
+    expect(find.text('Friday, 25 Sep'), findsOneWidget);
+    expect(find.text('How was the day?'), findsOneWidget);
+    await disposeTideApp(tester, db);
+  });
 }
