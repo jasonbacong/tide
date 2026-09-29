@@ -12,7 +12,7 @@ void main() {
     expect(find.text('Nothing planned. Add something small.'), findsOneWidget);
     await tester.tap(find.text('Add task'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'Call the dentist');
+    await tester.enterText(find.widgetWithText(TextField, 'Call the dentist'), 'Call the dentist');
     await tester.tap(find.text('Save task'));
     await tester.pumpAndSettle();
     expect(find.text('Call the dentist'), findsOneWidget);

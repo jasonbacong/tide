@@ -8,7 +8,7 @@ void main() {
   Future<void> capture(WidgetTester tester, String text) async {
     await tester.tap(find.byTooltip('Capture a thought'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), text);
+    await tester.enterText(find.widgetWithText(TextField, 'Book a table for Friday'), text);
     await tester.tap(find.text('Save to inbox'));
     await tester.pumpAndSettle();
   }

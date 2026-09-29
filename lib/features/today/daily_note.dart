@@ -1,5 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../content/daily_lines.dart';
 import '../../data/clock.dart';
+import '../../data/providers.dart';
+import '../../ui/motion.dart';
+import '../../ui/tide_colors.dart';
+import '../../ui/typography.dart';
 
 enum NoteKind { resurfaced, line }
 
@@ -48,4 +55,35 @@ DailyNote pickDailyNote({
   }
   final seed = int.parse(today.replaceAll('-', ''));
   return DailyNote(text: lines[seed % lines.length], kind: NoteKind.line);
+}
+
+final dailyNoteProvider = FutureProvider<DailyNote>((ref) async {
+  final today = ref.watch(todayKeyProvider);
+  final t = DateTime.parse(today);
+  final reflections = await ref.watch(checkInRepositoryProvider).reflectionsBetween(
+        dateKey(DateTime(t.year, t.month, t.day - 367)),
+        dateKey(DateTime(t.year, t.month, t.day - 28)),
+      );
+  return pickDailyNote(today: today, reflections: reflections);
+});
+
+class DailyNoteView extends ConsumerWidget {
+  const DailyNoteView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.tide;
+    final note = ref.watch(dailyNoteProvider);
+    return AnimatedSwitcher(
+      duration: motion(context, Motion.quick),
+      child: switch (note) {
+        AsyncData(:final value) => Padding(
+            key: ValueKey(value.text),
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(value.text, style: TideType.note(c.muted)),
+          ),
+        _ => const SizedBox(height: 8),
+      },
+    );
+  }
 }

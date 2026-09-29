@@ -14,11 +14,11 @@ void main() {
     await openSheet(tester);
     expect(find.text('Capture a thought'), findsWidgets);
 
-    await tester.enterText(find.byType(TextField), '  Book a table for Friday  ');
+    await tester.enterText(find.widgetWithText(TextField, 'Book a table for Friday'), '  Book a table for Friday  ');
     await tester.tap(find.text('Save to inbox'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(TextField), findsNothing);
+    expect(find.widgetWithText(TextField, 'Book a table for Friday'), findsNothing);
     expect(find.text('Saved to your inbox'), findsOneWidget);
     final rows = await tester.runAsync(() => db.select(db.captures).get());
     expect(rows!.single.body, 'Book a table for Friday');
@@ -29,7 +29,7 @@ void main() {
     final db = await pumpTideApp(tester);
     await openSheet(tester);
 
-    await tester.enterText(find.byType(TextField), '   ');
+    await tester.enterText(find.widgetWithText(TextField, 'Book a table for Friday'), '   ');
     await tester.tap(find.text('Save to inbox'));
     await tester.pumpAndSettle();
 
@@ -37,7 +37,7 @@ void main() {
     final rows = await tester.runAsync(() => db.select(db.captures).get());
     expect(rows, isEmpty);
 
-    await tester.enterText(find.byType(TextField), 'x');
+    await tester.enterText(find.widgetWithText(TextField, 'Book a table for Friday'), 'x');
     await tester.pump();
     expect(find.text('Type something first'), findsNothing);
     await disposeTideApp(tester, db);
@@ -47,7 +47,7 @@ void main() {
     final db = await pumpTideApp(tester);
     await openSheet(tester);
 
-    await tester.enterText(find.byType(TextField), 'Only once');
+    await tester.enterText(find.widgetWithText(TextField, 'Book a table for Friday'), 'Only once');
     await tester.tap(find.text('Save to inbox'));
     await tester.tap(find.text('Save to inbox'), warnIfMissed: false);
     await tester.pumpAndSettle();
