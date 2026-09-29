@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../habits/habits_card.dart';
 import '../tasks/later_screen.dart';
 import '../tasks/tasks_card.dart';
 import 'inbox_line.dart';
@@ -16,6 +17,8 @@ class TodayScreen extends StatelessWidget {
         children: const [
           TodayHeader(),
           SizedBox(height: 24),
+          HabitsCard(),
+          SizedBox(height: 12),
           TasksCard(trailing: LaterLink()),
           SizedBox(height: 8),
           InboxLine(),
