@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'data/enums.dart';
 import 'data/providers.dart';
 import 'features/onboarding/welcome_screen.dart';
+import 'features/settings/backup_section.dart';
 import 'router.dart';
 import 'ui/motion.dart';
 import 'ui/theme.dart';
@@ -56,7 +57,7 @@ class _TideAppState extends ConsumerState<TideApp> {
           theme: light,
           darkTheme: dark,
           themeMode: _mode(value.theme),
-          home: const WelcomeScreen(),
+          home: const WelcomeScreen(footer: RestoreFromBackupButton()),
         ),
       final value? => MaterialApp.router(
           title: 'Tide',

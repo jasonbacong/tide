@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tide/app.dart';
+import 'package:tide/data/backup/backup_service.dart';
 import 'package:tide/data/db/app_database.dart';
 import 'package:tide/data/providers.dart';
 import 'package:tide/data/repositories/settings_repository.dart';
@@ -48,3 +51,12 @@ Future<void> disposeTideApp(WidgetTester tester, AppDatabase db) async {
   await tester.pump(const Duration(seconds: 1));
   await db.close();
 }
+
+/// Points backups and exports at a temp directory for widget tests.
+Override backupDirsOverride(Directory tmp) => backupServiceProvider.overrideWith((ref) => BackupService(
+      db: ref.watch(databaseProvider),
+      clock: ref.watch(clockProvider),
+      settings: ref.watch(settingsRepositoryProvider),
+      backupsDir: () async => Directory('${tmp.path}/backups'),
+      exportDir: () async => Directory('${tmp.path}/export'),
+    ));
