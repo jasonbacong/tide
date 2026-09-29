@@ -17,13 +17,14 @@ class TideApp extends ConsumerStatefulWidget {
   ConsumerState<TideApp> createState() => _TideAppState();
 }
 
-class _TideAppState extends ConsumerState<TideApp> {
+class _TideAppState extends ConsumerState<TideApp> with WidgetsBindingObserver {
   late final GoRouter _router;
   late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _router = buildRouter();
     _lifecycle = AppLifecycleListener(
       onResume: () => ref.read(nowProvider.notifier).refresh(),
@@ -32,10 +33,17 @@ class _TideAppState extends ConsumerState<TideApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _lifecycle.dispose();
     _router.dispose();
     super.dispose();
   }
+
+  @override
+  void didChangeAccessibilityFeatures() => setState(() {});
+
+  bool get _reduceMotion =>
+      WidgetsBinding.instance.platformDispatcher.accessibilityFeatures.disableAnimations;
 
   ThemeMode _mode(ThemePreference p) => switch (p) {
         ThemePreference.system => ThemeMode.system,
@@ -65,7 +73,7 @@ class _TideAppState extends ConsumerState<TideApp> {
           theme: light,
           darkTheme: dark,
           themeMode: _mode(value.theme),
-          themeAnimationDuration: Motion.crossfade,
+          themeAnimationDuration: _reduceMotion ? Duration.zero : Motion.crossfade,
           themeAnimationCurve: Motion.ease,
           routerConfig: _router,
         ),

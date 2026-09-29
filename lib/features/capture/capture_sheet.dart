@@ -48,7 +48,7 @@ class _CaptureSheetState extends ConsumerState<CaptureSheet> {
     _saving = true;
     try {
       await ref.read(captureRepositoryProvider).add(_controller.text);
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) Navigator.of(context).pop(true);
     } catch (_) {
       _saving = false;
       if (mounted) setState(() => _error = "Couldn't save that. Try again");

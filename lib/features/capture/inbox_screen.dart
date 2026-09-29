@@ -23,11 +23,27 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   /// so a dismissed Dismissible is never rebuilt.
   final _hidden = <String>{};
 
+  /// Bumped when a swiped-away tile comes back, so it gets a fresh Dismissible.
+  final _generation = <String, int>{};
+
   Future<void> _archive(Capture capture) async {
     final repo = ref.read(captureRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _hidden.add(capture.id));
-    await repo.archive(capture.id);
+    try {
+      await repo.archive(capture.id);
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _hidden.remove(capture.id);
+          _generation[capture.id] = (_generation[capture.id] ?? 0) + 1;
+        });
+      }
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text("Couldn't archive that. Try again")));
+      return;
+    }
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
@@ -126,7 +142,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       appBar: AppBar(title: Text('Inbox', style: TideType.title(c.ink))),
       body: switch (inbox) {
         AsyncData(:final value) => _list(value.where((x) => !_hidden.contains(x.id)).toList()),
-        AsyncError() =>
+        // Riverpod retries failed loads, so the error can arrive while "loading".
+        _ when inbox.hasError =>
           Center(child: Text("Couldn't load your inbox.", style: TideType.body(c.muted))),
         _ => const SizedBox.shrink(),
       },
@@ -156,7 +173,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       itemBuilder: (context, i) {
         final capture = captures[i];
         return Dismissible(
-          key: ValueKey(capture.id),
+          key: ValueKey('${capture.id}#${_generation[capture.id] ?? 0}'),
           direction: DismissDirection.endToStart,
           onDismissed: (_) => _archive(capture),
           background: Container(

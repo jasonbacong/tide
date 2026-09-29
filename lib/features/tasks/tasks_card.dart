@@ -44,6 +44,7 @@ class _TasksCardState extends ConsumerState<TasksCard> {
       final i = pending.indexOf(t.id);
       return i < 0 ? pending.length : i;
     }
+
     return [...open]..sort((a, b) => rank(a).compareTo(rank(b)));
   }
 
@@ -60,24 +61,27 @@ class _TasksCardState extends ConsumerState<TasksCard> {
     await repo.delete(task.id);
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: const Text('Task deleted'),
-        duration: const Duration(seconds: 4),
-        persist: false,
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () async {
-            await repo.restore(task.id);
-            if (mounted) setState(() => _hidden.remove(task.id));
-          },
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Task deleted'),
+          duration: const Duration(seconds: 4),
+          persist: false,
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () async {
+              await repo.restore(task.id);
+              if (mounted) setState(() => _hidden.remove(task.id));
+            },
+          ),
         ),
-      ));
+      );
   }
 
   Widget _row(Task task) {
     final c = context.tide;
     final repo = ref.read(taskRepositoryProvider);
-    final titles = ref.watch(goalTitlesProvider).value ?? const <String, String>{};
+    final titles =
+        ref.watch(goalTitlesProvider).value ?? const <String, String>{};
     return Dismissible(
       key: ValueKey('dismiss-${task.id}'),
       direction: DismissDirection.endToStart,
@@ -87,13 +91,17 @@ class _TasksCardState extends ConsumerState<TasksCard> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(color: c.soft, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          color: c.soft,
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Icon(Icons.delete_outline, color: c.muted),
       ),
       child: TaskTile(
         task: task,
         goalTitle: task.goalId == null ? null : titles[task.goalId],
-        onToggle: () => task.isDone ? repo.uncomplete(task.id) : repo.complete(task.id),
+        onToggle: () =>
+            task.isDone ? repo.uncomplete(task.id) : repo.complete(task.id),
         onOpen: () => showTaskEditor(context, task: task),
       ),
     );
@@ -132,50 +140,64 @@ class _TasksCardState extends ConsumerState<TasksCard> {
     final loaded = openAsync.hasValue && doneAsync.hasValue;
     final failed = !loaded && (openAsync.hasError || doneAsync.hasError);
     final open = _applyPendingOrder(
-        openAsync.listOrEmpty.where((t) => !_hidden.contains(t.id)).toList());
-    final done = doneAsync.listOrEmpty.where((t) => !_hidden.contains(t.id)).toList();
+      openAsync.listOrEmpty.where((t) => !_hidden.contains(t.id)).toList(),
+    );
+    final done = doneAsync.listOrEmpty
+        .where((t) => !_hidden.contains(t.id))
+        .toList();
     final shown = filterTasks(open, filter);
 
     Widget hint(String text) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(text, style: TideType.body(c.muted)),
-        );
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Text(text, style: TideType.body(c.muted)),
+    );
 
+    final settle = motion(context, Motion.settle);
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (open.isNotEmpty) _FilterChips(filter: filter),
+        if (failed) hint("Couldn't load your tasks."),
+        if (loaded && open.isEmpty && done.isEmpty)
+          hint('Nothing planned. Add something small.'),
+        if (open.isNotEmpty && shown.isEmpty)
+          hint('Nothing matches. Try another filter.'),
+        if (shown.isNotEmpty)
+          filter.isEmpty
+              ? _reorderable(shown)
+              : Column(children: [for (final t in shown) _row(t)]),
+        for (final t in done)
+          KeyedSubtree(key: ValueKey('done-${t.id}'), child: _row(t)),
+        InkWell(
+          onTap: _add,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Icon(Icons.add, size: 22, color: c.muted),
+                ),
+                Text('Add task', style: TideType.body(c.muted)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
     return TideCard(
       title: 'Tasks',
       trailing: widget.trailing,
-      child: AnimatedSize(
-        duration: motion(context, Motion.settle),
-        curve: Motion.ease,
-        alignment: Alignment.topCenter,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (open.isNotEmpty) _FilterChips(filter: filter),
-            if (failed) hint("Couldn't load your tasks."),
-            if (loaded && open.isEmpty && done.isEmpty)
-              hint('Nothing planned. Add something small.'),
-            if (open.isNotEmpty && shown.isEmpty) hint('Nothing matches. Try another filter.'),
-            if (shown.isNotEmpty)
-              filter.isEmpty ? _reorderable(shown) : Column(children: [for (final t in shown) _row(t)]),
-            for (final t in done) KeyedSubtree(key: ValueKey('done-${t.id}'), child: _row(t)),
-            InkWell(
-              onTap: _add,
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Icon(Icons.add, size: 22, color: c.muted),
-                  ),
-                  Text('Add task', style: TideType.body(c.muted)),
-                ]),
-              ),
+      // A zero-length AnimatedSize (reduced motion) trips a layout assertion, so skip it.
+      child: settle == Duration.zero
+          ? content
+          : AnimatedSize(
+              duration: settle,
+              curve: Motion.ease,
+              alignment: Alignment.topCenter,
+              child: content,
             ),
-          ],
-        ),
-      ),
     );
   }
 }

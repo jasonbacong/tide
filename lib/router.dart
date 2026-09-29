@@ -24,8 +24,10 @@ Page<void> calmPage(GoRouterState state, Widget child) => CustomTransitionPage<v
         final curved = CurvedAnimation(parent: animation, curve: Motion.ease);
         return FadeTransition(
           opacity: curved,
-          child: SlideTransition(
-            position: Tween(begin: const Offset(0, 0.01), end: Offset.zero).animate(curved),
+          child: AnimatedBuilder(
+            animation: curved,
+            builder: (context, child) =>
+                Transform.translate(offset: Offset(0, 8 * (1 - curved.value)), child: child),
             child: child,
           ),
         );
