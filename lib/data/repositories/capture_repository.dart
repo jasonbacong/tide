@@ -53,6 +53,8 @@ class CaptureRepository {
 
   Future<void> unarchive(String id) => _setStatus(id, CaptureStatus.inbox);
 
+  Future<void> markConverted(String id) => _setStatus(id, CaptureStatus.converted);
+
   Future<void> _setStatus(String id, CaptureStatus status) =>
       (_db.update(_db.captures)..where((c) => c.id.equals(id))).write(
         CapturesCompanion(status: Value(status), updatedAt: Value(_clock.now().toUtc())),

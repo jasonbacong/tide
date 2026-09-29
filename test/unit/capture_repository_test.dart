@@ -85,4 +85,10 @@ void main() {
     await repo.add('later');
     expect(await inboxBodies(), ['earlier', 'later']);
   });
+
+  test('markConverted removes a capture from the inbox', () async {
+    final c = await repo.add('Book a table');
+    await repo.markConverted(c!.id);
+    expect(await inboxBodies(), isEmpty);
+  });
 }

@@ -5,6 +5,7 @@ import '../../data/providers.dart';
 import '../../data/repositories/capture_repository.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../tasks/task_editor_sheet.dart';
 import 'providers.dart';
 
 class InboxScreen extends ConsumerStatefulWidget {
@@ -39,6 +40,18 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           },
         ),
       ));
+  }
+
+  Future<void> _makeTask(Capture capture) async {
+    final repo = ref.read(captureRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final saved = await showTaskEditor(context, initialTitle: capture.body);
+    if (!saved) return;
+    if (mounted) setState(() => _hidden.add(capture.id));
+    await repo.markConverted(capture.id);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Task added'), duration: Duration(seconds: 2)));
   }
 
   @override
@@ -88,14 +101,27 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
             decoration: BoxDecoration(color: c.soft, borderRadius: BorderRadius.circular(18)),
             child: Icon(Icons.archive_outlined, color: c.muted),
           ),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: c.card, borderRadius: BorderRadius.circular(18)),
-            child: Text(
-              capture.body,
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-              style: TideType.body(c.ink),
+          child: Material(
+            color: c.card,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => _makeTask(capture),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(
+                      capture.body,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: TideType.body(c.ink),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.add_task, size: 20, color: c.muted),
+                ]),
+              ),
             ),
           ),
         );
