@@ -5,6 +5,7 @@ import '../../data/repositories/task_repository.dart';
 import '../../ui/motion.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../../ui/widgets/check_circle.dart';
 import 'task_labels.dart';
 
 class TaskTile extends StatefulWidget {
@@ -65,7 +66,7 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
               radius: 22,
               child: Padding(
                 padding: const EdgeInsets.all(10),
-                child: _CheckCircle(fill: fill, ring: c.warm, color: c.accent),
+                child: CheckCircle(fill: fill, ring: c.warm, color: c.accent),
               ),
             ),
             Expanded(
@@ -87,35 +88,6 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
           ],
         );
       },
-    );
-  }
-}
-
-class _CheckCircle extends StatelessWidget {
-  const _CheckCircle({required this.fill, required this.ring, required this.color});
-
-  final double fill;
-  final Color ring;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 22,
-      height: 22,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: fill > 0 ? color : ring, width: 2),
-      ),
-      alignment: Alignment.center,
-      child: Transform.scale(
-        scale: fill,
-        child: Container(
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          alignment: Alignment.center,
-          child: fill == 1 ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
-        ),
-      ),
     );
   }
 }

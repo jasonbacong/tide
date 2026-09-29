@@ -113,6 +113,13 @@ class TaskRepository {
     return q.watch().map(_toTasks);
   }
 
+  Stream<List<Task>> watchOpenForGoal(String goalId) {
+    final q = _db.select(_db.tasks)
+      ..where((t) => t.deletedAt.isNull() & t.completedAt.isNull() & t.goalId.equals(goalId))
+      ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]);
+    return q.watch().map(_toTasks);
+  }
+
   Future<void> complete(String id) => _write(id, TasksCompanion(completedAt: Value(_now())));
 
   Future<void> uncomplete(String id) => _write(id, const TasksCompanion(completedAt: Value(null)));

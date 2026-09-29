@@ -77,4 +77,11 @@ void main() {
     expect((await repo.watchActive().first).map((h) => h.name), ['b', 'a']);
     expect(await repo.activeCount(), 2);
   });
+
+  test('watchForGoal lists active linked habits', () async {
+    await repo.add(name: 'Walk', icon: 'walk', goalId: 'g1');
+    final old = await repo.add(name: 'Old', icon: 'walk', goalId: 'g1');
+    await repo.archive(old!.id);
+    expect((await repo.watchForGoal('g1').first).map((h) => h.name), ['Walk']);
+  });
 }

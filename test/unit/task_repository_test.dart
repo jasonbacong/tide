@@ -97,4 +97,12 @@ void main() {
     expect(later.energy, Energy.high);
     expect(later.minutes, 60);
   });
+
+  test('watchOpenForGoal lists open linked tasks only', () async {
+    await repo.add(title: 'linked', date: '2026-09-28', goalId: 'g1');
+    final done = await repo.add(title: 'linked done', date: '2026-09-28', goalId: 'g1');
+    await repo.complete(done!.id);
+    await repo.add(title: 'other', goalId: 'g2');
+    expect((await repo.watchOpenForGoal('g1').first).map((t) => t.title), ['linked']);
+  });
 }

@@ -70,6 +70,13 @@ class HabitRepository {
     return q.watch().map((rows) => rows.map(_toHabit).toList());
   }
 
+  Stream<List<Habit>> watchForGoal(String goalId) {
+    final q = _db.select(_db.habits)
+      ..where((h) => h.archived.equals(false) & h.deletedAt.isNull() & h.goalId.equals(goalId))
+      ..orderBy([(h) => OrderingTerm.asc(h.sortOrder)]);
+    return q.watch().map((rows) => rows.map(_toHabit).toList());
+  }
+
   Future<int> activeCount() async {
     final count = _db.habits.id.count();
     final row = await (_db.selectOnly(_db.habits)
