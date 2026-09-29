@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/async_x.dart';
@@ -43,6 +42,12 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
 
   GoalRepository get _repo => ref.read(goalRepositoryProvider);
 
+  /// Close only this screen, and only if it is still the top of its navigator
+  /// (the user may have gone back or switched tabs during the celebration).
+  void _close() {
+    if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) Navigator.of(context).pop();
+  }
+
   List<Milestone> _applyPendingOrder(List<Milestone> ms) {
     final pending = _pendingOrder;
     if (pending == null) return ms;
@@ -71,7 +76,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
     setState(() => _celebrating = true);
     await Future<void>.delayed(motion(context, Motion.bloom * 2));
     await _repo.markAchieved(widget.goalId);
-    if (mounted) context.pop();
+    _close();
   }
 
   Future<bool> _confirm(String title, String body, String action) async =>
@@ -95,7 +100,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
     }
     _leaving = true;
     await _repo.letGo(widget.goalId);
-    if (mounted) context.pop();
+    _close();
   }
 
   Future<void> _delete() async {
@@ -106,7 +111,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
     }
     _leaving = true;
     await _repo.delete(widget.goalId);
-    if (mounted) context.pop();
+    _close();
   }
 
   Future<void> _deleteMilestone(Milestone m) async {
@@ -139,7 +144,11 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
           appBar: AppBar(),
           body: Center(child: Text('This goal is no longer here.', style: TideType.body(c.muted))),
         ),
-      _ => const Scaffold(),
+      _ when goal.hasError => Scaffold(
+          appBar: AppBar(),
+          body: Center(child: Text("Couldn't load this goal.", style: TideType.body(c.muted))),
+        ),
+      _ => Scaffold(appBar: AppBar()),
     };
   }
 
@@ -149,8 +158,11 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
         .listOrEmpty
         .where((m) => !_hidden.contains(m.id))
         .toList());
-    final habits = ref.watch(linkedHabitsProvider(g.id)).listOrEmpty;
-    final tasks = ref.watch(linkedTasksProvider(g.id)).listOrEmpty;
+    final habitsAsync = ref.watch(linkedHabitsProvider(g.id));
+    final tasksAsync = ref.watch(linkedTasksProvider(g.id));
+    final linkedLoaded = habitsAsync.hasValue && tasksAsync.hasValue;
+    final habits = habitsAsync.listOrEmpty;
+    final tasks = tasksAsync.listOrEmpty;
     final done = milestones.where((m) => m.done).length;
     final progress = milestones.isEmpty ? null : done / milestones.length;
 
@@ -259,8 +271,10 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
           TideCard(
             title: 'Linked',
             child: habits.isEmpty && tasks.isEmpty
-                ? Text('Link habits and tasks to this goal from their editors.',
-                    style: TideType.body(c.muted))
+                ? (linkedLoaded
+                    ? Text('Link habits and tasks to this goal from their editors.',
+                        style: TideType.body(c.muted))
+                    : const SizedBox(height: 20))
                 : Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     if (habits.isNotEmpty)
                       Wrap(spacing: 8, runSpacing: 8, children: [

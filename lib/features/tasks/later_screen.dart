@@ -8,6 +8,7 @@ import '../../data/providers.dart';
 import '../../data/repositories/task_repository.dart';
 import '../../ui/tide_colors.dart';
 import '../../ui/typography.dart';
+import '../goals/providers.dart';
 import 'providers.dart';
 import 'task_editor_sheet.dart';
 import 'task_labels.dart';
@@ -44,6 +45,7 @@ class LaterScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.tide;
     final tasks = ref.watch(laterTasksProvider).listOrEmpty;
+    final titles = ref.watch(goalTitlesProvider).value ?? const <String, String>{};
     return Scaffold(
       appBar: AppBar(title: Text('Later', style: TideType.title(c.ink))),
       body: tasks.isEmpty
@@ -72,6 +74,8 @@ class LaterScreen extends ConsumerWidget {
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(task.title, style: TideType.body(c.ink)),
                           if (meta.isNotEmpty) Text(meta, style: TideType.label(c.muted)),
+                          if (titles[task.goalId] != null)
+                            Text('→ ${titles[task.goalId]}', style: TideType.label(c.accent)),
                         ]),
                       ),
                     ),

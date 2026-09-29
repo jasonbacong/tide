@@ -16,7 +16,10 @@ class GoalPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.tide;
     final goals = ref.watch(activeGoalsProvider).listOrEmpty;
-    if (goals.isEmpty) return const SizedBox.shrink();
+    final titles = ref.watch(goalTitlesProvider).value ?? const <String, String>{};
+    // A link to a past goal still needs a chip, so it can be removed.
+    final pastLink = value != null && !goals.any((g) => g.goal.id == value) ? titles[value] : null;
+    if (goals.isEmpty && pastLink == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 12),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -25,6 +28,8 @@ class GoalPicker extends ConsumerWidget {
           child: Text('Goal', style: TideType.label(c.muted)),
         ),
         Wrap(spacing: 8, runSpacing: 4, children: [
+          if (pastLink != null)
+            ChoiceChip(label: Text(pastLink), selected: true, onSelected: (_) => onChanged(null)),
           for (final g in goals)
             ChoiceChip(
               label: Text(g.goal.title),
