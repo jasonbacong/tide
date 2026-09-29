@@ -34,11 +34,37 @@ class _AutosaveFieldState extends State<AutosaveField> {
 
   late final TextEditingController _controller =
       TextEditingController(text: widget.initialValue ?? '');
+  final _focus = FocusNode();
+  late final AppLifecycleListener _lifecycle =
+      AppLifecycleListener(onHide: _flushIfPending, onPause: _flushIfPending);
   late String _lastSaved = (widget.initialValue ?? '').trim();
   Timer? _debounce;
   Timer? _savedTimer;
   bool _showSaved = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle; // start listening
+  }
+
+  /// Picks up edits made elsewhere (e.g. the Journal) while this field sits idle.
+  @override
+  void didUpdateWidget(AutosaveField old) {
+    super.didUpdateWidget(old);
+    final incoming = widget.initialValue ?? '';
+    final busy = _focus.hasFocus || (_debounce?.isActive ?? false);
+    if (incoming != (old.initialValue ?? '') && incoming.trim() != _lastSaved && !busy) {
+      _controller.text = incoming;
+      _lastSaved = incoming.trim();
+    }
+  }
+
+  /// Leaving the app mid-sentence: save now rather than risk the process being killed.
+  void _flushIfPending() {
+    if (_debounce?.isActive ?? false) _flush();
+  }
 
   void _changed(String _) {
     if (_error != null) setState(() => _error = null);
@@ -74,6 +100,8 @@ class _AutosaveFieldState extends State<AutosaveField> {
       if (value.trim() != _lastSaved) widget.onSave(value);
     }
     _savedTimer?.cancel();
+    _lifecycle.dispose();
+    _focus.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -86,6 +114,7 @@ class _AutosaveFieldState extends State<AutosaveField> {
       children: [
         TextField(
           controller: _controller,
+          focusNode: _focus,
           minLines: widget.minLines,
           maxLines: widget.maxLines,
           textCapitalization: TextCapitalization.sentences,

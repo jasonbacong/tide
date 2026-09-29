@@ -59,6 +59,11 @@ class CheckInCard extends ConsumerWidget {
                 onSave: (v) => repo.saveIntention(today, v),
               ),
             ),
+      // Riverpod retries failed loads, so the error can arrive while "loading".
+      _ when checkIn.hasError => TideCard(
+          title: evening ? 'Reflection' : 'Intention',
+          child: Text("Couldn't load today's check-in.", style: TideType.body(c.muted)),
+        ),
       _ => const SizedBox.shrink(),
     };
   }

@@ -35,8 +35,11 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
   void _onDayTap(String date, List<CheckIn> entries) {
     final key = _keys[date];
     if (entries.any((e) => e.date == date) && key?.currentContext != null) {
-      Scrollable.ensureVisible(key!.currentContext!,
-          duration: motion(context, Motion.settle), curve: Motion.ease);
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: motion(context, Motion.settle),
+        curve: Motion.ease,
+      );
     } else {
       context.go('/journal/$date');
     }
@@ -47,42 +50,61 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
     final c = context.tide;
     final today = ref.watch(todayKeyProvider);
     final now = ref.watch(nowProvider);
-    final entries = ref.watch(journalEntriesProvider).listOrEmpty;
-    final moods = switch (ref.watch(monthMoodsProvider((_month.year, _month.month)))) {
+    final entriesAsync = ref.watch(journalEntriesProvider);
+    final entries = entriesAsync.listOrEmpty;
+    final moods = switch (ref.watch(
+      monthMoodsProvider((_month.year, _month.month)),
+    )) {
       AsyncData(:final value) => value,
       _ => const <String, int?>{},
     };
     final isCurrentMonth = _month.year == now.year && _month.month == now.month;
 
+    // Built eagerly (not a lazy ListView) so every entry has a context to scroll to.
     return SafeArea(
-      child: ListView(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 120),
-        children: [
-          Text('Journal', style: TideType.title(c.ink)),
-          const SizedBox(height: 16),
-          TideCard(
-            child: MonthCalendar(
-              year: _month.year,
-              month: _month.month,
-              moods: moods,
-              today: today,
-              onDayTap: (d) => _onDayTap(d, entries),
-              onPrevious: () => setState(() => _month = DateTime(_month.year, _month.month - 1)),
-              onNext: isCurrentMonth
-                  ? null
-                  : () => setState(() => _month = DateTime(_month.year, _month.month + 1)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Journal', style: TideType.title(c.ink)),
+            const SizedBox(height: 16),
+            TideCard(
+              child: MonthCalendar(
+                year: _month.year,
+                month: _month.month,
+                moods: moods,
+                today: today,
+                onDayTap: (d) => _onDayTap(d, entries),
+                onPrevious: () => setState(
+                  () => _month = DateTime(_month.year, _month.month - 1),
+                ),
+                onNext: isCurrentMonth
+                    ? null
+                    : () => setState(
+                        () => _month = DateTime(_month.year, _month.month + 1),
+                      ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          if (entries.isEmpty)
-            Text('Your check-ins will gather here, day by day.', style: TideType.body(c.muted)),
-          for (final e in entries)
-            Padding(
-              key: _keys.putIfAbsent(e.date, GlobalKey.new),
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _EntryCard(entry: e),
-            ),
-        ],
+            const SizedBox(height: 16),
+            if (entriesAsync.hasValue && entries.isEmpty)
+              Text(
+                'Your check-ins will gather here, day by day.',
+                style: TideType.body(c.muted),
+              ),
+            if (entriesAsync.hasError && !entriesAsync.hasValue)
+              Text(
+                "Couldn't load your journal.",
+                style: TideType.body(c.muted),
+              ),
+            for (final e in entries)
+              Padding(
+                key: _keys.putIfAbsent(e.date, GlobalKey.new),
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _EntryCard(entry: e),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -107,22 +129,29 @@ class _EntryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(children: [
-                Expanded(
-                  child: Text(DateFormat('EEEE, d MMM').format(DateTime.parse(entry.date)),
-                      style: TideType.label(c.muted)),
-                ),
-                if (entry.mood != null)
-                  Tooltip(
-                    message: moodNames[entry.mood! - 1],
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle, color: TideColors.mood[entry.mood! - 1]),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      DateFormat('EEEE, d MMM')
+                          .format(DateTime.parse(entry.date)),
+                      style: TideType.label(c.muted),
                     ),
                   ),
-              ]),
+                  if (entry.mood != null)
+                    Tooltip(
+                      message: moodNames[entry.mood! - 1],
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: TideColors.mood[entry.mood! - 1],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               if (entry.intention != null) ...[
                 const SizedBox(height: 8),
                 Text(entry.intention!, style: TideType.note(c.muted)),

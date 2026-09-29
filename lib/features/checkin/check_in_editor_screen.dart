@@ -66,6 +66,9 @@ class CheckInEditorScreen extends ConsumerWidget {
               ),
             ],
           ),
+        _ when checkIn.hasError => Center(
+            child: Text("Couldn't load this day.", style: TideType.body(c.muted)),
+          ),
         _ => const SizedBox.shrink(),
       },
     );
