@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../habits/habit_history_sheet.dart';
 import '../habits/habits_card.dart';
 import '../tasks/later_screen.dart';
 import '../tasks/tasks_card.dart';
@@ -14,14 +15,14 @@ class TodayScreen extends StatelessWidget {
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 120),
-        children: const [
-          TodayHeader(),
-          SizedBox(height: 24),
-          HabitsCard(),
-          SizedBox(height: 12),
-          TasksCard(trailing: LaterLink()),
-          SizedBox(height: 8),
-          InboxLine(),
+        children: [
+          const TodayHeader(),
+          const SizedBox(height: 24),
+          HabitsCard(onLongPress: (habit) => showHabitHistory(context, habit)),
+          const SizedBox(height: 12),
+          const TasksCard(trailing: LaterLink()),
+          const SizedBox(height: 8),
+          const InboxLine(),
         ],
       ),
     );
