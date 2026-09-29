@@ -8,13 +8,18 @@ import 'package:tide/data/providers.dart';
 import 'fake_clock.dart';
 import 'test_db.dart';
 
+typedef Seed = Future<void> Function(AppDatabase db, FakeClock clock);
+
 /// Pumps the full app on an in-memory database. Defaults to Monday 28 Sep 2026, 09:00.
-Future<AppDatabase> pumpTideApp(WidgetTester tester, {FakeClock? clock}) async {
+/// [seed] runs against the database before the app starts.
+Future<AppDatabase> pumpTideApp(WidgetTester tester, {FakeClock? clock, Seed? seed}) async {
   final db = testDb();
+  final fake = clock ?? FakeClock(DateTime(2026, 9, 28, 9));
+  if (seed != null) await tester.runAsync(() => seed(db, fake));
   await tester.pumpWidget(ProviderScope(
     overrides: [
       databaseProvider.overrideWithValue(db),
-      clockProvider.overrideWithValue(clock ?? FakeClock(DateTime(2026, 9, 28, 9))),
+      clockProvider.overrideWithValue(fake),
     ],
     child: const TideApp(),
   ));

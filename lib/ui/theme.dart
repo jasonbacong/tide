@@ -81,5 +81,13 @@ ThemeData buildTheme(Brightness brightness, PartOfDay period) {
         borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
     ),
+    chipTheme: ChipThemeData(
+      backgroundColor: colors.background,
+      selectedColor: colors.soft,
+      side: BorderSide.none,
+      shape: const StadiumBorder(),
+      showCheckmark: false,
+      labelStyle: TextStyle(color: colors.ink, fontFamily: TideType.sans, fontSize: 13),
+    ),
   );
 }
