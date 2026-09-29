@@ -6,6 +6,7 @@ import 'features/checkin/check_in_editor_screen.dart';
 import 'features/goals/goal_detail_screen.dart';
 import 'features/goals/goals_screen.dart';
 import 'features/journal/journal_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/tasks/later_screen.dart';
 import 'features/today/today_screen.dart';
 import 'ui/home_shell.dart';
@@ -81,6 +82,10 @@ GoRouter buildRouter() => GoRouter(
               ),
             ]),
           ],
+        ),
+        GoRoute(
+          path: '/settings',
+          pageBuilder: (context, state) => calmPage(state, const SettingsScreen()),
         ),
       ],
     );

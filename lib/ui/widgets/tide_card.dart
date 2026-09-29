@@ -14,20 +14,26 @@ class TideCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.tide;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: c.card, borderRadius: BorderRadius.circular(18)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (title != null)
-            Row(children: [
-              Expanded(child: Text(title!, style: TideType.label(c.muted))),
-              ?trailing,
-            ]),
-          if (title != null) const SizedBox(height: 8),
-          child,
-        ],
+    // A Material surface (not a coloured box) so ink ripples inside the card are visible.
+    return Material(
+      color: c.card,
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (title != null)
+              Row(
+                children: [
+                  Expanded(child: Text(title!, style: TideType.label(c.muted))),
+                  ?trailing,
+                ],
+              ),
+            if (title != null) const SizedBox(height: 8),
+            child,
+          ],
+        ),
       ),
     );
   }

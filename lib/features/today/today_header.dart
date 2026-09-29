@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/providers.dart';
@@ -21,7 +22,15 @@ class TodayHeader extends ConsumerWidget {
       children: [
         Text(DateFormat('EEEE, d MMM').format(now), style: TideType.label(c.muted)),
         const SizedBox(height: 4),
-        Text(greetingFor(period, name), style: TideType.greeting(c.ink)),
+        Semantics(
+          button: true,
+          label: 'Open settings',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => context.push('/settings'),
+            child: Text(greetingFor(period, name), style: TideType.greeting(c.ink)),
+          ),
+        ),
       ],
     );
   }

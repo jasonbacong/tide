@@ -17,3 +17,6 @@ final habitHistoryProvider =
         to: today,
       );
 });
+
+final activeHabitsProvider =
+    StreamProvider<List<Habit>>((ref) => ref.watch(habitRepositoryProvider).watchActive());
