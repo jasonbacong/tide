@@ -14,6 +14,8 @@ import 'task_labels.dart';
 Future<bool> showTaskEditor(BuildContext context, {Task? task, String? initialTitle}) async {
   final saved = await showModalBottomSheet<bool>(
     context: context,
+    // Above the tab shell's + button and bottom bar.
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,

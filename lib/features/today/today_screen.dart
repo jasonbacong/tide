@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../tasks/tasks_card.dart';
 import 'inbox_line.dart';
 import 'today_header.dart';
 
@@ -13,7 +14,9 @@ class TodayScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 120),
         children: const [
           TodayHeader(),
-          SizedBox(height: 16),
+          SizedBox(height: 24),
+          TasksCard(),
+          SizedBox(height: 8),
           InboxLine(),
         ],
       ),
