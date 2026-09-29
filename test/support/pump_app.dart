@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tide/app.dart';
 import 'package:tide/data/db/app_database.dart';
@@ -12,7 +13,8 @@ typedef Seed = Future<void> Function(AppDatabase db, FakeClock clock);
 
 /// Pumps the full app on an in-memory database. Defaults to Monday 28 Sep 2026, 09:00.
 /// [seed] runs against the database before the app starts.
-Future<AppDatabase> pumpTideApp(WidgetTester tester, {FakeClock? clock, Seed? seed}) async {
+Future<AppDatabase> pumpTideApp(WidgetTester tester,
+    {FakeClock? clock, Seed? seed, List<Override> overrides = const []}) async {
   // Jason's Galaxy S24 Ultra: 1440×3120 px at ~3.5× → about 411×891 logical pixels.
   tester.view.physicalSize = const Size(1440, 3120);
   tester.view.devicePixelRatio = 3.5;
@@ -24,6 +26,7 @@ Future<AppDatabase> pumpTideApp(WidgetTester tester, {FakeClock? clock, Seed? se
     overrides: [
       databaseProvider.overrideWithValue(db),
       clockProvider.overrideWithValue(fake),
+      ...overrides,
     ],
     child: const TideApp(),
   ));

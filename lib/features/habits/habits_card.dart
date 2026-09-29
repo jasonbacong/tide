@@ -53,7 +53,8 @@ class _HabitsCardState extends ConsumerState<HabitsCard> {
   @override
   Widget build(BuildContext context) {
     final c = context.tide;
-    final habits = ref.watch(todayHabitsProvider).listOrEmpty;
+    final habitsAsync = ref.watch(todayHabitsProvider);
+    final habits = habitsAsync.listOrEmpty;
     return TideCard(
       title: 'Habits',
       trailing: IconButton(
@@ -65,8 +66,11 @@ class _HabitsCardState extends ConsumerState<HabitsCard> {
       child: habits.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text("Add a habit or two you'd like to keep.",
-                  style: TideType.body(c.muted)),
+              child: habitsAsync.hasValue
+                  ? Text("Add a habit or two you'd like to keep.", style: TideType.body(c.muted))
+                  : habitsAsync.hasError
+                      ? Text("Couldn't load your habits.", style: TideType.body(c.muted))
+                      : const SizedBox(height: 20),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,

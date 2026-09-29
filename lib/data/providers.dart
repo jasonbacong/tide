@@ -22,14 +22,27 @@ final captureRepositoryProvider = Provider<CaptureRepository>(
   (ref) => CaptureRepository(ref.watch(databaseProvider), ref.watch(clockProvider)),
 );
 
-/// Current time, re-read every minute and on app resume (see TideApp).
+/// Current time, re-read at every minute boundary (so midnight is caught on the dot)
+/// and on app resume (see TideApp).
 class NowNotifier extends Notifier<DateTime> {
+  Timer? _timer;
+
   @override
   DateTime build() {
     final clock = ref.watch(clockProvider);
-    final timer = Timer.periodic(const Duration(minutes: 1), (_) => state = clock.now());
-    ref.onDispose(timer.cancel);
+    ref.onDispose(() => _timer?.cancel());
+    _scheduleNextMinute(clock);
     return clock.now();
+  }
+
+  void _scheduleNextMinute(Clock clock) {
+    _timer?.cancel();
+    final now = clock.now();
+    final next = DateTime(now.year, now.month, now.day, now.hour, now.minute + 1);
+    _timer = Timer(next.difference(now), () {
+      state = clock.now();
+      _scheduleNextMinute(clock);
+    });
   }
 
   void refresh() => state = ref.read(clockProvider).now();

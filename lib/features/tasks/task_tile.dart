@@ -37,8 +37,13 @@ class _TaskTileState extends State<TaskTile> with SingleTickerProviderStateMixin
     }
     if (_c.isAnimating || _c.value == 1) return;
     _c.duration = motion(context, Motion.taskCheck + Motion.strike);
-    await _c.forward(from: 0);
-    await widget.onToggle();
+    final onToggle = widget.onToggle;
+    try {
+      await _c.forward(from: 0).orCancel;
+    } on TickerCanceled {
+      // The row was rebuilt elsewhere mid-animation; the tick still counts.
+    }
+    await onToggle();
   }
 
   @override
@@ -131,19 +136,20 @@ class StrikeText extends StatelessWidget {
         maxLines: 1,
         ellipsis: '…',
         textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
       )..layout(maxWidth: constraints.maxWidth);
       final width = painter.width;
       painter.dispose();
       return CustomPaint(
-        foregroundPainter: _StrikePainter(progress: progress, width: width, color: style.color!),
+        foregroundPainter: StrikePainter(progress: progress, width: width, color: style.color!),
         child: Text(text, style: style, maxLines: 1, overflow: TextOverflow.ellipsis),
       );
     });
   }
 }
 
-class _StrikePainter extends CustomPainter {
-  _StrikePainter({required this.progress, required this.width, required this.color});
+class StrikePainter extends CustomPainter {
+  StrikePainter({required this.progress, required this.width, required this.color});
 
   final double progress;
   final double width;
@@ -163,6 +169,6 @@ class _StrikePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_StrikePainter old) =>
+  bool shouldRepaint(StrikePainter old) =>
       old.progress != progress || old.width != width || old.color != color;
 }

@@ -83,7 +83,8 @@ ThemeData buildTheme(Brightness brightness, PartOfDay period) {
     ),
     chipTheme: ChipThemeData(
       backgroundColor: colors.background,
-      selectedColor: colors.soft,
+      selectedColor: colors.accent.withValues(alpha: 0.28),
+      checkmarkColor: colors.ink,
       side: BorderSide.none,
       shape: const StadiumBorder(),
       showCheckmark: false,

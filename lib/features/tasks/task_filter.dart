@@ -34,6 +34,8 @@ class TaskFilterNotifier extends Notifier<TaskFilter> {
   void toggleEnergy(Energy e) => state =
       TaskFilter(energy: state.energy == e ? null : e, maxMinutes: state.maxMinutes);
 
+  void clear() => state = const TaskFilter();
+
   void toggleMaxMinutes(int m) => state =
       TaskFilter(energy: state.energy, maxMinutes: state.maxMinutes == m ? null : m);
 }

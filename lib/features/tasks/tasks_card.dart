@@ -29,6 +29,29 @@ class _TasksCardState extends ConsumerState<TasksCard> {
   /// Hidden the moment a row is swiped away, before the stream catches up.
   final _hidden = <String>{};
 
+  /// Order shown immediately after a drag, until the database stream catches up.
+  List<String>? _pendingOrder;
+
+  List<Task> _applyPendingOrder(List<Task> open) {
+    final pending = _pendingOrder;
+    if (pending == null) return open;
+    if (open.map((t) => t.id).join(',') == pending.join(',')) {
+      _pendingOrder = null; // caught up
+      return open;
+    }
+    int rank(Task t) {
+      final i = pending.indexOf(t.id);
+      return i < 0 ? pending.length : i;
+    }
+    return [...open]..sort((a, b) => rank(a).compareTo(rank(b)));
+  }
+
+  Future<void> _add() async {
+    final saved = await showTaskEditor(context);
+    // Don't let an active filter hide what was just added.
+    if (saved && mounted) ref.read(taskFilterProvider.notifier).clear();
+  }
+
   Future<void> _delete(Task task) async {
     final repo = ref.read(taskRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
@@ -83,6 +106,7 @@ class _TasksCardState extends ConsumerState<TasksCard> {
       onReorderItem: (oldIndex, newIndex) {
         final ids = [for (final t in tasks) t.id];
         ids.insert(newIndex, ids.removeAt(oldIndex));
+        setState(() => _pendingOrder = ids);
         ref.read(taskRepositoryProvider).reorder(ids);
       },
       children: [
@@ -100,16 +124,13 @@ class _TasksCardState extends ConsumerState<TasksCard> {
   Widget build(BuildContext context) {
     final c = context.tide;
     final filter = ref.watch(taskFilterProvider);
-    final open = ref
-        .watch(todayOpenTasksProvider)
-        .listOrEmpty
-        .where((t) => !_hidden.contains(t.id))
-        .toList();
-    final done = ref
-        .watch(todayDoneTasksProvider)
-        .listOrEmpty
-        .where((t) => !_hidden.contains(t.id))
-        .toList();
+    final openAsync = ref.watch(todayOpenTasksProvider);
+    final doneAsync = ref.watch(todayDoneTasksProvider);
+    final loaded = openAsync.hasValue && doneAsync.hasValue;
+    final failed = !loaded && (openAsync.hasError || doneAsync.hasError);
+    final open = _applyPendingOrder(
+        openAsync.listOrEmpty.where((t) => !_hidden.contains(t.id)).toList());
+    final done = doneAsync.listOrEmpty.where((t) => !_hidden.contains(t.id)).toList();
     final shown = filterTasks(open, filter);
 
     Widget hint(String text) => Padding(
@@ -128,13 +149,15 @@ class _TasksCardState extends ConsumerState<TasksCard> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (open.isNotEmpty) _FilterChips(filter: filter),
-            if (open.isEmpty && done.isEmpty) hint('Nothing planned. Add something small.'),
+            if (failed) hint("Couldn't load your tasks."),
+            if (loaded && open.isEmpty && done.isEmpty)
+              hint('Nothing planned. Add something small.'),
             if (open.isNotEmpty && shown.isEmpty) hint('Nothing matches. Try another filter.'),
             if (shown.isNotEmpty)
               filter.isEmpty ? _reorderable(shown) : Column(children: [for (final t in shown) _row(t)]),
             for (final t in done) KeyedSubtree(key: ValueKey('done-${t.id}'), child: _row(t)),
             InkWell(
-              onTap: () => showTaskEditor(context),
+              onTap: _add,
               borderRadius: BorderRadius.circular(10),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -170,12 +193,14 @@ class _FilterChips extends ConsumerWidget {
         children: [
           for (final e in Energy.values)
             FilterChip(
+              showCheckmark: true,
               label: Text(energyLabel(e)),
               selected: filter.energy == e,
               onSelected: (_) => notifier.toggleEnergy(e),
             ),
           for (final m in const [15, 30])
             FilterChip(
+              showCheckmark: true,
               label: Text('≤ $m min'),
               selected: filter.maxMinutes == m,
               onSelected: (_) => notifier.toggleMaxMinutes(m),
