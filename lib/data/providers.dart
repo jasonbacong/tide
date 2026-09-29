@@ -6,6 +6,7 @@ import '../ui/day_period.dart';
 import 'clock.dart';
 import 'db/app_database.dart';
 import 'repositories/capture_repository.dart';
+import 'repositories/habit_repository.dart';
 import 'repositories/task_repository.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -42,4 +43,8 @@ final todayKeyProvider = Provider<String>((ref) => dateKey(ref.watch(nowProvider
 
 final taskRepositoryProvider = Provider<TaskRepository>(
   (ref) => TaskRepository(ref.watch(databaseProvider), ref.watch(clockProvider)),
+);
+
+final habitRepositoryProvider = Provider<HabitRepository>(
+  (ref) => HabitRepository(ref.watch(databaseProvider), ref.watch(clockProvider)),
 );
